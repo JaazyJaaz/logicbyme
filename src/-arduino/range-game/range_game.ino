@@ -1,8 +1,10 @@
+
+
 // https://docs.arduino.cc/learn/built-in-libraries/software-serial/
 #include <Stepper.h>
 #include <SoftwareSerial.h>
-#include <string>
-#include <iostream> // cout << "text here to console"
+//#include <string>
+//#include <iostream> // cout << "text here to console"
 
 //-----------------------------
 const int powerSwitch_pin = 1; // switch
@@ -53,10 +55,67 @@ void setup() {
   pinMode(rangeFinderButton_pin, INPUT); // RangeFinder Button
 }
 
+
+void getPowerStatus() {
+  bool powerSwitch = digitalRead(powerSwitch_pin) == 1;
+  if (powerSwitch && !isGamePowered) {
+    isGamePowered = true;
+    goto reset_label; // game just turned on
+  } else {
+    stat = GameStatus::OFF;
+  }
+}
+
+bool getRangeFinderButtonStatus() {
+  // called when in active mode to check when to freeze motor
+  bool isBtnPressed = digitalRead(rangeFinderButton_pin) == 1;
+  if (stat = GameStatus::ACTIVE) { // only works when actively playing
+    // freezeOverride = true;
+    stat =  (isBtnPressed == 1) ? GameStatus::FROZEN : GameStatus::ACTIVE;
+  } else {
+    // do nothing?
+  }
+  return isBtnPressed;
+}
+
+bool getStatusButtonStatus() {
+  // returns if stat got changed
+  bool isBtnPressed = digitalRead(gameStatusButton_pin) == 1;
+  bool rtnVal = false;
+
+  if (isBtnPressed) {
+    switch (stat) {
+      case GameStatus::OFF:
+        rtnVal = false;
+        break;
+      case GameStatus::CHILLIN:
+        stat = GameStatus::ACTIVE;
+        rtnVal = true;
+        break;
+      case GameStatus::ACTIVE:
+        stat = GameStatus::FROZEN;
+        rtnVal = true;
+        break;
+      case GameStatus::FROZEN:
+        stat = GameStatus::RESET;
+        rtnVal = true;
+        break;
+      case GameStatus::RESET:
+        // continue reseting? dont let it interrupt
+        rtnVal = false;
+                 break;
+                 default:
+                 break;
+    }
+  }
+  return rtnVal;
+}
+
+
 void loop() {
   // !!jaa: figure out how to read isGamePowered all the time without delay
   switch (stat) {
-    case GameStatus.OFF:
+    case GameStatus::OFF:
       Serial.println("game is turned off.");
       getPowerStatus();
       
@@ -64,7 +123,7 @@ void loop() {
       digitalWrite(rangeFinderLed_pin, LOW);
       break;
 
-    case GameStatus.CHILLIN: // init
+    case GameStatus::CHILLIN: // init
       getPowerStatus();
       getStatusButtonStatus();
       // chillin at the bottom of the scale
@@ -74,12 +133,12 @@ void loop() {
       digitalWrite(rangeFinderLed_pin, HIGH);
       break;
 
-    case GameStatus.ACTIVE:
+    case GameStatus::ACTIVE:
       getPowerStatus();
       bool shouldStopRangeFinder = getRangeFinderButtonStatus(); // listen for RangeFinder btn
       getStatusButtonStatus(); // for override
       // stop range finder
-      If (shouldStopRangeFinder) {
+      If (this.shouldStopRangeFinder) {
         goto freeze_label;
       }
       // note: should we check current position to make sure at reset
@@ -91,10 +150,10 @@ void loop() {
       delay(150);
       break;
 
-    case GameStatus.FROZEN:
+    case GameStatus::FROZEN:
 freeze_label:
-      if (stat != GameStatus.FREOZEN) {
-        stat = GameStatus.FROZEN;
+      if (stat != GameStatus::FREOZEN) {
+        stat = GameStatus::FROZEN;
       }
       getPowerStatus();
       getStatusButtonStatus(); // if clicked goto reset
@@ -104,10 +163,10 @@ freeze_label:
       // did you win? we may be able to check using one ir sensor
       break;
 
-    case GameStatus.RESET:
+    case GameStatus::RESET:
 reset_label:
-      if (stat != GameStatus.RESET) {
-        stat = GameStatus.RESET;
+      if (stat != GameStatus::RESET) {
+        stat = GameStatus::RESET;
       }
       getPowerStatus();
       getStatusButtonStatus();
@@ -124,71 +183,3 @@ reset_label:
   }
 } // main loop
 
-
-void getPowerStatus() {
-  bool powerSwitch = digitalRead(powerSwitch_pin) == 1;
-  if (powerSwitch && !isGamePowered) {
-    isGamePowered = true;
-    goto reset_label; // game just turned on
-  } else {
-    stat = GameStatus.OFF;
-  }
-}
-
-bool getRangeFinderButtonStatus() {
-  // called when in active mode to check when to freeze motor
-  bool isBtnPressed = digitalRead(rangeFinderButton_pin) == 1;
-  if (stat = GameStatus.ACTIVE) { // only works when actively playing
-    // freezeOverride = true;
-    stat =  (isBtnPressed == 1) ? GameStatus.FROZEN : GameStatus.ACTIVE;
-  } else {
-    // do nothing?
-  }
-  return isBtnPressed;
-}
-
-bool getStatusButtonStatus() {
-  // returns if stat got changed
-  bool isBtnPressed = digitalRead(gameStatusButton_pin) == 1;
-  bool rtnVal = false;
-
-  if (isBtnPressed) {
-    switch (stat) {
-      case GameStatus.OFF:
-        rtnVal = false;
-        break;
-      case GameStatus.CHILLIN:
-        stat = GameStatus.ACTIVE;
-        rtnVal = true;
-        break;
-      case GameStatus.ACTIVE:
-        stat = GameStatus.FROZEN;
-        rtnVal = true;
-        break;
-      case GameStatus.FROZEN:
-        stat = GameStatus.RESET;
-        rtnVal = true;
-        break;
-      case GameStatus.RESET:
-        // continue reseting? dont let it interrupt
-        rtnVal = false
-                 break;
-    }
-  }
-  return rtnVal;
-}
-
-/*
-  switch (stat) {
-    case GameStatus.OFF:
-      break;
-    case GameStatus.CHILLIN:
-      break;
-    case GameStatus.ACTIVE:
-      break;
-    case GameStatus.FROZEN:
-      break;
-    case GameStatus.RESET:
-      break;
-  }
-*/
