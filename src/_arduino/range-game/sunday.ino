@@ -24,8 +24,7 @@ Stepper stepper = Stepper(motorSpeed_stepPerRot, motorIn1_pin, motorIn3_pin, mot
 
 void setup() {
   Serial.begin(9600);
-  stepper.setSpeed(motorSpeed_set);
-
+  
   // set pins
   // outpput: push button LEDs
   pinMode(upBtnLed_pin, OUTPUT);
@@ -34,6 +33,7 @@ void setup() {
   pinMode(upBtnLed_pin, INPUT);
   pinMode(lowBtnLed_pin, INPUT);
   // stepper motor: output
+  stepper.setSpeed(motorSpeed_set);
   pinMode(motorIn1_pin, OUTPUT);
   pinMode(motorIn2_pin, OUTPUT);
   pinMode(motorIn3_pin, OUTPUT);
