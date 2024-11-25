@@ -2,7 +2,7 @@
 #include <SoftwareSerial.h>
 
 #define upperBtn_pin 6
-@define upperBtnLed_pin 8
+#define upperBtnLed_pin 8
 #define lowerBtn_pin 13
 #define lowerBtnLed_pin 7
 
