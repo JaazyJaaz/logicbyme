@@ -22,7 +22,7 @@ bool isLowStopPressed = false;
 #define motorIn3_pin 12 // out
 #define motorIn4_pin 9 // out
 #define motorSpeedPot_pin 1 // input potentiometer pin A1
-int motorSpeedPot_analogue = 0;
+int motorSpeedPot_now = 0;
 #define motorSpeed_stepPerRot 100 // steps per rotation
 int motorSpeed_set = 30;
 int motorSpeed_prev = 0;
@@ -69,18 +69,18 @@ void loop() {
   // stopper micro switches
   isTopStopPressed = digitalRead(topStop_pin) == 1;
   isLowStopPressed = digitalRead(lowStop_pin) == 1;
+  Serial.println("-");
   Serial.print("isTopStopPressed: "); Serial.println(isTopStopPressed);
   Serial.print("isLowStopPressed: "); Serial.println(isLowStopPressed);
 
   // motor stuff
-  motorSpeedPot_analogue = analogRead(motorSpeedPot_pin); // motor speed
-  motorSpeed_now = motorSpeed_now - motorSpeed_prev; //analogRead(motorSpeedPot_pin);  // pot
+  motorSpeedPot_now = analogRead(motorSpeedPot_pin); // motor speed
+  // motorSpeed_now = motorSpeed_now - motorSpeed_prev; 
   motor.step(motorSpeed_now);
-  motorSpeed_prev = motorSpeed_now; // save prev val
-  Serial.print("motorSpeedPot_analogue: "); Serial.println(isTopStopPressed);
-  Serial.print("motorSpeed_now: "); Serial.println(isLowStopPressed);
-
-
+  // motorSpeed_prev = motorSpeed_now; // save prev val
+  Serial.println("-");
+  Serial.print("motorSpeedPot_now: "); Serial.println(motorSpeedPot_now);
+  Serial.print("motorSpeed_now: "); Serial.println(motorSpeed_now);
 
 // -- code ---------------------------------
 /* control the motor
@@ -109,5 +109,5 @@ void loop() {
  *
  */
 
+} // end of main loop
 
-}
