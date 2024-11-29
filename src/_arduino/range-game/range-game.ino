@@ -11,9 +11,14 @@
 #define lowBtn_pin 7 // in
 #define lowBtnLed_pin 13 // out
 
-bool isUpBtnPressed = false;
-bool isLowBtnPressed = false;
-int buttonPressedDelay = 400; // ms
+bool isUpperButtonPressed = false;
+int upperButtonTimePress = 0;
+int upperButtonTimePressLimit = 0;
+int upperButtonClicks = 0;
+int upperButtonEffectiveClicks = 0;
+int allowableDoubleClickDelay = 1000; // ms
+bool isLowerButtonPressed = false;
+int buttonPressedDelay = 200; // ms
 
 int stepCount = 0;         // number of steps the motor has taken
 int maxStepCount = 10000;
@@ -42,6 +47,15 @@ bool tryMoveStepper(int steps)
   return false;
 }
 
+void resetPosition()
+{
+  if (stepCount > 0)
+  {
+    Serial.println("resetting pointer position...");
+    myStepper.step(-stepCount);
+  }
+}
+
 void handlePotentiometer()
 {
   motorSpeedPot_now = analogRead(motorSpeedPot_pin); // motor speed
@@ -57,23 +71,47 @@ void handlePotentiometer()
 
 void handleUpperButton()
 {
-  isUpBtnPressed = digitalRead(upBtn_pin) == 0;  
-  Serial.print("isUpBtnPressed: "); Serial.println(isUpBtnPressed);
-
-  if (isUpBtnPressed) {
-    Serial.println("~~~~~~up btn pressed");
+  // TODO: Figure out how to break this into simpler functions
+  // TODO: Break this out into a general purpose library (don't use for buttons that need instant response!)
+  isUpperButtonPressed = digitalRead(upBtn_pin) == 0;  
+  Serial.print("isUpperButtonPressed: "); Serial.println(isUpperButtonPressed);
+  
+  if (isUpperButtonPressed){
     delay(buttonPressedDelay);
-    isMovingUp = !isMovingUp;
+
+    if (upperButtonClicks == 0) {
+      upperButtonTimePress = millis();
+      upperButtonTimePressLimit = upperButtonTimePress + allowableDoubleClickDelay;    
+      upperButtonClicks = 1;
+    }
+    else if (upperButtonClicks == 1 && millis() < upperButtonTimePressLimit){
+      Serial.println("Upper Button Pressed twice");
+
+      //set variables back to 0
+      upperButtonTimePress = 0;
+      upperButtonTimePressLimit = 0;
+      upperButtonClicks = 0;      
+    }
+    else if (upperButtonClicks == 1 && upperButtonTimePressLimit != 0 && millis() > upperButtonTimePressLimit)
+    {
+      Serial.println("Upper Button Pressed once");
+      isMovingUp = !isMovingUp;
+
+      //set variables back to 0
+      upperButtonTimePress = 0;
+      upperButtonTimePressLimit = 0;
+      upperButtonClicks = 0;  
+    }
   }
 }
 
 void handleLowerButton()
 {
-  isLowBtnPressed = digitalRead(lowBtn_pin) == 0;
-  Serial.print("isLowBtnPressed: "); Serial.println(isLowBtnPressed);
+  isLowerButtonPressed = digitalRead(lowBtn_pin) == 0;
+  Serial.print("isLowerButtonPressed: "); Serial.println(isLowerButtonPressed);
 
-  if (isLowBtnPressed) {
-    Serial.println("~~~~~low btn pressed");
+  if (isLowerButtonPressed) {
+    Serial.println("~~~~~lower button pressed");
     delay(buttonPressedDelay);
     isFrozen = !isFrozen;
   }
@@ -104,15 +142,14 @@ void loop() {
 
   handleLowerButton();
 
-  int dir = isMovingUp ? stepsPerLoop : -stepsPerLoop;
+  int stepsToMove = isMovingUp ? stepsPerLoop : -stepsPerLoop;
   // step one step:
   if (!isFrozen) {
     Serial.println("~~~~~Range Finder is MOVING");
-    bool didStepperMove = tryMoveStepper(dir);
-    Serial.print("steps attempted:"); 
-    Serial.println(stepCount);
-    Serial.print("Did stepper move:");
-    Serial.print(didStepperMove);
+    bool didStepperMove = tryMoveStepper(stepsToMove);
+    Serial.print("Steps attempted:"); Serial.println(stepsToMove);
+    Serial.print("Did stepper move:"); Serial.println(didStepperMove);
+    Serial.print("Current step count:"); Serial.println(stepCount);
   } else {
     Serial.println("~~~~~Range Finder is FROZEN");
   }
