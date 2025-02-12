@@ -1,13 +1,8 @@
-//Lab 09 Design and implement a video game
-//EE215L
-//May 12, 2016
-
 #include <msp430F5438A.h>
 #include "hal_MSP-EXP430F5438.h"
-//#include <stdio.h>
 
 /*
-Design and Implement a Video Game
+Design and Implement a Video Game:
 There are a number of classic computer games that are fun to play and possible
 to emulate on the MSP 430 processor and experiment board.
 Assignment: Write code in C on the MSP 430 processor to implement an Atari style
